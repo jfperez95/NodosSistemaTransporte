@@ -1,0 +1,9 @@
+# La paleta de modos de transporte esta validada contra superficie CLARA
+# (contraste y separacion bajo daltonismo). Fijar el tema evita que el navegador
+# la muestre sobre un fondo oscuro para el que no fue verificada.
+[theme]
+base = "light"
+primaryColor = "#0B5FA5"
+
+[server]
+headless = true

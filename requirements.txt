@@ -1,0 +1,12 @@
+# Modelado del grafo, datos y algoritmos
+networkx>=3.2
+pandas>=2.0
+numpy>=1.26
+
+# Interfaz de usuario y visualizacion georreferenciada
+streamlit>=1.35
+folium>=0.16
+streamlit-folium>=0.20
+
+# Pruebas
+pytest>=8.0
