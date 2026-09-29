@@ -1,29 +1,12 @@
 """
 BFS sobre el grafo de lineas: minimo numero de transbordos.
 
-Motivacion
-----------
-"Menos transbordos" se puede aproximar con Dijkstra dandole al transbordo una
-penalizacion enorme, y asi lo hace el criterio `transbordos` de `config.py`. Pero
-existe una formulacion exacta y mas barata: si el costo de una ruta es
-simplemente *cuantas veces se cambia de linea*, entonces todas las aristas valen
-1 en un grafo auxiliar y el camino minimo se obtiene con BUSQUEDA EN AMPLITUD.
+Si el costo de una ruta es cuantas veces se cambia de linea, todas las aristas
+valen 1 y el camino minimo se obtiene con busqueda en amplitud, en O(|V| + |E|).
 
-BFS recorre el grafo por niveles usando una COLA (FIFO), como indica la guia del
-curso, y garantiza encontrar el camino con menos aristas en O(|V| + |E|), sin el
-factor logaritmico de la cola de prioridad.
-
-Grafo auxiliar
---------------
-  * Vertices: las lineas de servicio (A, B, K, J, T, ...).
-  * Aristas: dos lineas son adyacentes si comparten al menos una estacion, o si
-    un transbordo a pie une una estacion de cada una; es decir, si es posible
-    pasar directamente de una a otra.
-
-El numero minimo de transbordos entre dos estaciones es entonces la distancia en
-ese grafo entre el conjunto de lineas del origen y el del destino. El resultado
-sirve para verificar de forma independiente lo que devuelve Dijkstra: si ambos
-coinciden, la implementacion multicriterio esta contando bien los transbordos.
+El grafo auxiliar tiene por vertices las lineas de servicio; dos lineas son
+adyacentes si comparten una estacion o si un transbordo a pie une una estacion de
+cada una. El resultado verifica de forma independiente lo que devuelve Dijkstra.
 """
 
 from collections import deque
@@ -37,21 +20,14 @@ from src.modelo.pesos import CondicionesRed
 
 
 def construir_grafo_de_lineas(G: nx.MultiDiGraph) -> Dict[str, Set[str]]:
-    """
-    Lista de adyacencia del grafo auxiliar de lineas.
-
-    {linea: {lineas con las que comparte al menos una estacion}}
-    """
+    """Lista de adyacencia del grafo auxiliar de lineas."""
     adyacencia: Dict[str, Set[str]] = {}
 
-    # (a) Dos lineas son adyacentes si comparten una estacion.
     for _, datos in G.nodes(data=True):
         lineas = set(datos["lineas"])
         for linea in lineas:
             adyacencia.setdefault(linea, set()).update(lineas - {linea})
 
-    # (b) Tambien lo son si un transbordo a pie une una estacion de una con una
-    #     estacion de la otra: caminar entre andenes sigue siendo un transbordo.
     for u, v, datos in G.edges(data=True):
         if datos["tipo"] != "transbordo_peatonal":
             continue
@@ -81,8 +57,7 @@ def minimos_transbordos(G: nx.MultiDiGraph, origen: str, destino: str) -> Option
 
     adyacencia = construir_grafo_de_lineas(G)
 
-    # BFS multi-origen: se arranca simultaneamente desde todas las lineas que
-    # pasan por la estacion de origen.
+    # BFS multi-origen: arranca desde todas las lineas de la estacion de origen.
     cola = deque((linea, 0) for linea in lineas_origen)
     visitadas = set(lineas_origen)
 
@@ -100,7 +75,7 @@ def minimos_transbordos(G: nx.MultiDiGraph, origen: str, destino: str) -> Option
 
 
 def camino_de_lineas(G: nx.MultiDiGraph, origen: str, destino: str) -> Optional[List[str]]:
-    """Secuencia de lineas a tomar que realiza el minimo numero de transbordos."""
+    """Secuencia de lineas que realiza el minimo numero de transbordos."""
     lineas_origen = set(G.nodes[origen]["lineas"])
     lineas_destino = set(G.nodes[destino]["lineas"])
 
@@ -139,10 +114,9 @@ def bfs_minimos_transbordos(
     """
     Ruta concreta que minimiza los transbordos.
 
-    BFS entrega el numero optimo de cambios de linea, pero no un itinerario
-    estacion por estacion. La ruta final se obtiene con Dijkstra bajo el criterio
-    `transbordos` y se ETIQUETA con la cota calculada por BFS, de modo que la
-    interfaz puede advertir si ambas medidas difieren.
+    BFS entrega el numero optimo de cambios de linea; el itinerario estacion por
+    estacion se obtiene con Dijkstra bajo el criterio `transbordos`, y se advierte
+    si ambas medidas difieren.
     """
     condiciones = condiciones or CondicionesRed(criterio="transbordos")
     if condiciones.criterio != "transbordos":

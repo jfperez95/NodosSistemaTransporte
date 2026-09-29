@@ -1,9 +1,8 @@
 """
-Representacion del resultado de una busqueda: la ruta y sus tramos.
+Resultado de una busqueda: la ruta y sus tramos.
 
-Separar el resultado de los algoritmos permite que Dijkstra, A*, BFS y Yen
-devuelvan todos el mismo tipo de objeto, y que la interfaz y las pruebas no
-dependan de cual algoritmo se uso.
+Los cuatro algoritmos devuelven este mismo tipo de objeto, de modo que la
+interfaz y las pruebas no dependen de cual se uso.
 """
 
 from dataclasses import dataclass, field

@@ -15,18 +15,8 @@ calcula rutas óptimas entre estaciones según distintos criterios.
 ```bash
 pip install -r requirements.txt
 
-streamlit run app.py                     # la aplicación
-python scripts/04_verificar_entrega.py   # verifica que todo funciona
-python -m pytest -q                      # 105 pruebas
-```
-
-Scripts auxiliares:
-
-```bash
-python scripts/00_generar_conexiones.py  # regenera datos/conexiones.csv
-python scripts/01_validar_red.py         # valida datos y describe el grafo
-python scripts/02_demo_rutas.py          # demuestra los cuatro algoritmos
-python scripts/03_exportar_mapa.py A01 L01   # mapa a docs/mapa_red.html
+streamlit run app.py     # la aplicación
+python -m pytest -q      # 105 pruebas
 ```
 
 ---
@@ -45,7 +35,6 @@ python scripts/03_exportar_mapa.py A01 L01   # mapa a docs/mapa_red.html
 | 7 | Pruebas y casos límite (105 pruebas) | Hecho |
 | 8 | Manual de usuario y documento técnico | Hecho |
 | 9 | Guion de sustentación | Hecho |
-| 10 | Verificación de entrega | Hecho |
 
 ---
 
@@ -83,7 +72,6 @@ NodosSistemaTransporte/
 │   ├── manual_usuario.md       # entregable (1 página)
 │   ├── documento_tecnico.md    # entregable (1 página)
 │   └── guion_sustentacion.md   # guion de los 10 minutos
-├── scripts/
 └── tests/                      # 105 pruebas
 ```
 
@@ -190,7 +178,6 @@ real del SITVA. Sin embargo:
 * Tiempos, tarifas, ocupaciones y probabilidades de retraso son **parámetros de
   simulación verosímiles**, no datos oficiales de Metro de Medellín.
 
-`datos/conexiones.csv` no se digitó a mano: lo genera
-`scripts/00_generar_conexiones.py` a partir de la topología declarada y de las
-coordenadas, con distancias Haversine y tiempos derivados de la velocidad
-comercial de cada modo. El dataset es reproducible y auditable.
+Las distancias de `datos/conexiones.csv` se obtuvieron aplicando la fórmula de
+Haversine sobre las coordenadas de las estaciones, y los tiempos base se
+derivaron de la velocidad comercial de cada modo de transporte.

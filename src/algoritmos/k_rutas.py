@@ -1,25 +1,13 @@
 """
 Algoritmo de Yen: las k mejores rutas alternativas.
 
-El MVP exige "permitir la visualizacion de rutas alternativas". Mostrar varias
-rutas no es repetir Dijkstra: el segundo mejor camino debe ser el mejor camino
-que NO sea igual al primero.
+La segunda mejor ruta es el mejor camino que no sea igual al primero. Para cada
+ruta aceptada y cada nodo de desvio se prohiben las aristas que reproducirian un
+camino conocido y los nodos anteriores al desvio, y se corre Dijkstra desde ahi;
+la raiz mas el desvio forman una candidata.
 
-Yen resuelve esto sin modificar Dijkstra. Para cada ruta ya aceptada y cada nodo
-de desvio (spur node) sobre ella:
-
-  1. Se prohiben las aristas que reproducirian un camino ya conocido.
-  2. Se prohiben los nodos anteriores al desvio, para no generar ciclos.
-  3. Se corre Dijkstra desde el nodo de desvio hasta el destino.
-  4. La raiz (tramo comun) mas el desvio forman una ruta candidata.
-
-Las candidatas se guardan en una lista ordenada y la mejor pasa a ser la
-siguiente ruta oficial. Complejidad: O(k |V| (|E| + |V| log |V|)), es decir k
-ejecuciones de Dijkstra por cada nodo de desvio.
-
-Ademas del orden por peso, se ofrece un filtro de DISIMILITUD: dos rutas que
-comparten el 90 % de sus estaciones no son alternativas utiles para un usuario,
-asi que se descartan las demasiado parecidas a las ya elegidas.
+Complejidad: O(k |V| (|E| + |V| log |V|)). Ademas del orden por peso se aplica un
+filtro de disimilitud, porque dos rutas casi identicas no son alternativas utiles.
 """
 
 from dataclasses import replace
@@ -62,7 +50,7 @@ def k_rutas_alternativas(
     """
     Devuelve hasta `k` rutas distintas ordenadas de mejor a peor.
 
-    `max_similitud` descarta alternativas que se parezcan demasiado a una ruta ya
+    `max_similitud` descarta alternativas demasiado parecidas a una ruta ya
     aceptada; con 1.0 se obtiene el comportamiento clasico de Yen.
     """
     if k < 1:
@@ -86,7 +74,6 @@ def k_rutas_alternativas(
             nodo_desvio = estaciones[i]
             raiz = ultima.tramos[:i]
 
-            # 1. Prohibir las aristas que regenerarian una ruta ya conocida.
             aristas_prohibidas = set()
             for ruta in aceptadas:
                 if _firma_prefijo(ruta, i) == _firma_prefijo(ultima, i):
@@ -94,7 +81,6 @@ def k_rutas_alternativas(
                         t = ruta.tramos[i]
                         aristas_prohibidas.add((t.origen, t.destino, t.linea))
 
-            # 2. Prohibir los nodos de la raiz, para evitar ciclos.
             nodos_prohibidos = frozenset(estaciones[:i])
 
             desvio = dijkstra(
@@ -105,7 +91,6 @@ def k_rutas_alternativas(
             if not desvio.existe or not desvio.tramos:
                 continue
 
-            # 3. Unir raiz + desvio en una ruta candidata completa.
             candidata = Ruta(
                 origen=origen,
                 destino=destino,
@@ -115,9 +100,8 @@ def k_rutas_alternativas(
                 perfil_horario=condiciones.perfil_horario,
                 nodos_expandidos=desvio.nodos_expandidos,
             )
-            # El desvio se calculo como un viaje independiente: hay que reevaluar
-            # el itinerario completo para que el transbordo y la tarifa del punto
-            # de union queden bien contados.
+            # El desvio se calculo aparte: hay que reevaluar el itinerario
+            # completo para contar bien el transbordo del punto de union.
             evaluar_ruta(G, candidata, condiciones)
 
             firma = _firma(candidata)

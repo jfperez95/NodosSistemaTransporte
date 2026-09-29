@@ -1,53 +1,15 @@
 """
-Reto avanzado 1 - Prediccion de tiempos de viaje con intervalos de confianza.
+Prediccion de tiempos de viaje con intervalos de confianza.
 
-El planteamiento
-----------------
-El calculador entrega un tiempo puntual ("43 minutos"), pero un tiempo puntual es
-una promesa que la red no puede cumplir: el mismo viaje tarda distinto cada dia.
-Lo util para el usuario es un intervalo: "entre 39 y 51 minutos, 9 de cada 10
-veces".
+Sobre un historico sintetico reproducible se ajusta un modelo multiplicativo en
+escala logaritmica por backfitting. El modelo no recibe los factores con que se
+simularon los datos: los estima.
 
-Como no existen datos historicos reales disponibles, se generan datos
-**sinteticos verosimiles** y sobre ellos se ajusta el modelo. El procedimiento es
-honesto porque la generacion y el ajuste son independientes: el modelo no conoce
-los parametros con que se simularon los datos, los estima.
+La incertidumbre tiene dos componentes. La idiosincratica es propia de cada tramo
+y se diluye al sumar; la sistemica la comparten todos los tramos de una misma
+jornada y no se diluye. La varianza de la ruta es
 
-Modelo generador (lo que se simula)
------------------------------------
-    t = t_base * f_perfil * f_dia * f_clima * f_evento * f_jornada * e
-
-con `f_jornada` un factor compartido por todos los tramos de una misma jornada
-(ver mas abajo) y `e` un ruido lognormal de media 1. Se elige multiplicativo -y no aditivo-
-porque los retrasos del transporte escalan con la duracion del tramo: un trayecto
-de 20 minutos se retrasa mas, en minutos absolutos, que uno de 2.
-
-Modelo ajustado (lo que se estima)
-----------------------------------
-Se toma logaritmo, con lo que el producto se vuelve suma y los factores se
-estiman como medias de los residuos logaritmicos por grupo. La varianza residual
-da la incertidumbre.
-
-Dos fuentes de incertidumbre
-----------------------------
-Tratar los tramos como independientes es insuficiente: al sumar veinte tramos la
-dispersion relativa se encoge por raiz de n y el intervalo sale absurdamente
-estrecho (mas o menos un minuto sobre ochenta). En la realidad hay dos
-componentes:
-
-  * **Idiosincratica**: cada tramo tiene su propio azar, independiente de los
-    demas. Se promedia y se diluye en las rutas largas.
-  * **Sistemica**: hay jornadas en que TODO el sistema va lento -una falla de
-    energia, un aguacero, un dia de congestion general-. Afecta a la vez a todos
-    los tramos del viaje, no se diluye, y es la que domina en rutas largas.
-
-El historico se simula con ambas (un factor compartido por jornada) y el ajuste
-las separa: la dispersion *entre* jornadas estima la sistemica, y la dispersion
-*dentro* de cada jornada, la idiosincratica. La varianza de la ruta es entonces
-
-    Var(T) = SUMA_i (t_i * sigma_modo_i)^2  +  (sigma_sistemica * T)^2
-
-El primer termino se diluye con la longitud del viaje; el segundo no.
+    Var(T) = SUMA_i (t_i * sigma_modo_i)^2 + (sigma_sistemica * T)^2
 """
 
 from dataclasses import dataclass, field
@@ -109,9 +71,7 @@ class ModeloTiempos:
         return self.sigma_por_modo.get(modo, 0.12)
 
 
-# --------------------------------------------------------------------------- #
 # 1. Generacion del historico sintetico
-# --------------------------------------------------------------------------- #
 def generar_historico(
     G: nx.MultiDiGraph,
     observaciones: int = 6000,
@@ -196,9 +156,7 @@ def generar_historico(
     return pd.DataFrame(filas)
 
 
-# --------------------------------------------------------------------------- #
 # 2. Ajuste del modelo
-# --------------------------------------------------------------------------- #
 def ajustar_modelo(historico: pd.DataFrame) -> ModeloTiempos:
     """
     Estima los factores multiplicativos y la dispersion residual.
@@ -233,9 +191,7 @@ def ajustar_modelo(historico: pd.DataFrame) -> ModeloTiempos:
     )
     residual = df["residuo"] - ajuste
 
-    # Descomposicion de la varianza residual en sus dos componentes: la variacion
-    # ENTRE jornadas es la sistemica; la que queda DENTRO de cada jornada, la
-    # idiosincratica de cada tramo.
+    # La variacion entre jornadas es la sistemica; la de dentro, la idiosincratica.
     sigma_sistemica = float(residual.groupby(df["jornada"]).mean().std())
     idiosincratico = residual - residual.groupby(df["jornada"]).transform("mean")
 
@@ -287,9 +243,7 @@ def comparar_con_la_verdad(modelo: ModeloTiempos) -> pd.DataFrame:
     return pd.DataFrame(filas)
 
 
-# --------------------------------------------------------------------------- #
 # 3. Prediccion sobre una ruta
-# --------------------------------------------------------------------------- #
 # Cuantiles de la normal estandar para los niveles de confianza mas usados.
 Z = {0.80: 1.2816, 0.90: 1.6449, 0.95: 1.9600}
 

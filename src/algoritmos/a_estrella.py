@@ -1,29 +1,13 @@
 """
 Algoritmo A* con heuristica geografica.
 
-Idea
-----
-A* es Dijkstra guiado: en vez de ordenar la cola por g(n) -el costo acumulado-,
-la ordena por
+A* es Dijkstra guiado: ordena la cola por f(n) = g(n) + h(n), donde h(n) estima
+optimistamente lo que falta. Aqui h(n) es la distancia Haversine al destino a la
+velocidad maxima del sistema, de modo que h(n) <= h*(n): la heuristica es
+admisible y consistente, y A* devuelve el mismo camino optimo que Dijkstra.
 
-        f(n) = g(n) + h(n)
-
-donde h(n) es una estimacion optimista de lo que falta para llegar al destino.
-Aqui h(n) se obtiene de la distancia en linea recta (Haversine) entre la estacion
-n y el destino, convertida a minutos suponiendo la velocidad maxima del sistema.
-
-Admisibilidad y optimalidad
----------------------------
-Ninguna ruta real puede ser mas corta que la linea recta ni mas rapida que la
-velocidad maxima, luego h(n) <= h*(n) para todo n: la heuristica es ADMISIBLE y
-A* devuelve el mismo camino optimo que Dijkstra. Ademas h cumple la desigualdad
-triangular sobre la distancia geografica, es decir es CONSISTENTE, por lo que
-basta con expandir cada estado una sola vez.
-
-La heuristica se escala por `alfa_tiempo` del criterio activo para mantenerse en
-las mismas unidades que el peso, y se anula cuando el criterio no es temporal
-(costo o transbordos), caso en el que A* degenera -correctamente- en Dijkstra.
-Esta comparacion Dijkstra vs A* es la que reporta `benchmark.py`.
+La heuristica se escala por `alfa_tiempo` para mantener las unidades del peso y
+se anula cuando el criterio no es temporal, caso en que A* degenera en Dijkstra.
 """
 
 import heapq
@@ -53,9 +37,6 @@ def a_estrella(
     condiciones = condiciones or CondicionesRed()
 
     if origen == destino:
-        # Caso limite: el viaje trivial. Sin este corte, la parada temprana
-        # ignoraria el estado inicial y la busqueda devolveria un ciclo de ida y
-        # vuelta en vez del camino vacio.
         return Ruta(
             origen=origen,
             destino=destino,
@@ -88,7 +69,7 @@ def a_estrella(
     expandidos = 0
 
     orden = count()
-    cola = [(h(origen), next(orden), inicio)]   # (f, orden, estado)
+    cola = [(h(origen), next(orden), inicio)]
 
     estado_final: Optional[Estado] = None
     peso_final = 0.0

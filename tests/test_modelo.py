@@ -28,9 +28,7 @@ def G():
     return construir_grafo()
 
 
-# --------------------------------------------------------------------------- #
 # Carga de datos
-# --------------------------------------------------------------------------- #
 def test_estaciones_y_conexiones_se_cargan():
     estaciones = cargar_estaciones()
     conexiones = cargar_conexiones(estaciones)
@@ -50,9 +48,7 @@ def test_archivo_inexistente_falla_con_mensaje_claro():
         cargar_estaciones(RAIZ / "datos" / "no_existe.csv")
 
 
-# --------------------------------------------------------------------------- #
 # Estructura del grafo
-# --------------------------------------------------------------------------- #
 def test_el_grafo_es_dirigido_y_multigrafo(G):
     assert G.is_directed()
     assert G.is_multigraph()
@@ -95,9 +91,7 @@ def test_el_grafo_es_disperso(G):
     assert G.number_of_edges() < 5 * G.number_of_nodes()
 
 
-# --------------------------------------------------------------------------- #
 # Funcion de peso
-# --------------------------------------------------------------------------- #
 def test_todos_los_pesos_son_estrictamente_positivos(G):
     """Condicion que exige Dijkstra; si falla, el algoritmo deja de ser valido."""
     for criterio in config.CRITERIOS:
@@ -139,9 +133,7 @@ def test_la_linea_turistica_cobra_su_recargo(G):
     assert costo_arista(datos_arvi, sistema_previo="riel") == 12000
 
 
-# --------------------------------------------------------------------------- #
 # Validacion de entradas
-# --------------------------------------------------------------------------- #
 def test_criterio_invalido_es_rechazado():
     with pytest.raises(ValueError):
         CondicionesRed(criterio="teletransporte")

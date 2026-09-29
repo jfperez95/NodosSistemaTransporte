@@ -1,13 +1,4 @@
-"""
-Entidades del dominio: la estacion (vertice) y la conexion (arista).
-
-Formalmente el sistema se modela como un grafo dirigido y ponderado
-
-        G = (V, E, w)
-
-donde V es el conjunto de estaciones, E el conjunto de tramos dirigidos entre
-estaciones y w: E -> R+ la funcion de peso dinamica definida en `pesos.py`.
-"""
+"""Entidades del dominio: la estacion (vertice) y la conexion (arista)."""
 
 from dataclasses import dataclass, field
 from typing import Tuple
@@ -41,10 +32,8 @@ class Conexion:
     """
     Una arista del grafo: un tramo entre dos estaciones.
 
-    `bidireccional` indica que el tramo se recorre en ambos sentidos; al
-    construir el grafo dirigido se expande en DOS aristas opuestas. Modelarlo asi
-    permite representar despues situaciones reales asimetricas (un cierre que
-    afecta un solo sentido, o una pendiente que hace mas lento un sentido).
+    Un tramo `bidireccional` se expande en dos aristas dirigidas opuestas al
+    construir el grafo.
     """
 
     origen: str

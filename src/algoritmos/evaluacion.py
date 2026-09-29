@@ -1,17 +1,10 @@
 """
-Reevaluacion exacta de una ruta ya construida.
+Reevaluacion exacta de una ruta construida por partes.
 
-Por que hace falta
-------------------
-El peso de un tramo depende de la linea con la que se llega a el. Cuando Yen
-CONCATENA la raiz de una ruta con un desvio calculado por separado, el primer
-tramo del desvio fue evaluado como si el pasajero acabara de entrar al sistema:
-sin penalizacion de transbordo y pagando tarifa completa.
-
-Esta funcion recorre el itinerario resultante de principio a fin y recalcula
-minutos, costo, riesgo, transbordos y peso con la linea previa correcta. Sin este
-paso, Yen podria ordenar mal las alternativas y la interfaz mostraria un costo
-inflado.
+Cuando Yen concatena la raiz de una ruta con un desvio calculado por separado, el
+primer tramo del desvio quedo evaluado como si el pasajero acabara de entrar al
+sistema. Esta funcion recorre el itinerario completo y recalcula minutos, costo,
+riesgo, transbordos y peso con la linea previa correcta.
 """
 
 from typing import Optional

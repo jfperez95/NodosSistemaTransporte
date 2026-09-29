@@ -1,38 +1,13 @@
 """
 Algoritmo de Dijkstra sobre el espacio de estados (estacion, linea).
 
-Por que Dijkstra
-----------------
-La funcion de peso `w` construida en `src/modelo/pesos.py` es estrictamente
-positiva para toda arista, que es justamente la condicion que exige Dijkstra:
-encuentra la distancia minima entre un nodo origen y los demas nodos de un grafo
-ponderado conexo con pesos no negativos. Como no hay pesos negativos no se
-necesita Bellman-Ford, y como solo interesa un origen a la vez no se justifica el
-costo O(|V|^3) de Floyd-Warshall.
+La funcion de peso es estrictamente positiva para toda arista, que es la
+condicion de validez de Dijkstra: no se necesita Bellman-Ford (pesos negativos)
+ni se justifica el O(|V|^3) de Floyd-Warshall (todos contra todos).
 
-Implementacion
---------------
-Se implementa explicitamente -no se delega en `networkx.shortest_path`- por dos
-razones: (1) el peso de una arista depende del estado con que se llega al nodo,
-algo que la funcion de libreria no admite; (2) el criterio 2 de la rubrica evalua
-la implementacion del algoritmo, no su invocacion.
-
-Se usa una COLA DE PRIORIDAD (`heapq`, un monticulo binario) para extraer siempre
-el estado no visitado de menor distancia provisional, tal como describe la guia
-del curso. Con monticulo binario la complejidad es
-
-        O((|S| + |E_S|) log |S|)
-
-frente a O(|S|^2) de la version que busca el minimo linealmente. En un grafo
-disperso como este -|E| del orden de |V|- la diferencia es sustancial.
-
-Detalles de eficiencia aplicados:
-  * Lazy deletion: en vez de actualizar la prioridad de un elemento ya encolado
-    se inserta una entrada nueva y se descartan las obsoletas al extraerlas.
-  * Parada temprana: la busqueda termina en cuanto se EXTRAE un estado meta, no
-    cuando se relaja; en ese momento su distancia ya es definitiva.
-  * Desempate determinista por contador, para que dos ejecuciones con los mismos
-    datos devuelvan siempre la misma ruta.
+Se implementa explicitamente porque el peso de una arista depende del estado con
+que se llega al nodo, algo que `networkx.shortest_path` no admite. Con cola de
+prioridad binaria la complejidad es O((|S| + |E_S|) log |S|).
 """
 
 import heapq
@@ -58,19 +33,16 @@ def dijkstra(
     """
     Camino de peso minimo entre `origen` y `destino`.
 
-    `aristas_prohibidas` y `nodos_prohibidos` permiten que Yen (k rutas
-    alternativas) y el analisis de resiliencia reutilicen este mismo algoritmo
-    sin modificar el grafo.
-
-    Devuelve una `Ruta`; si no hay camino, `Ruta.existe` es False.
+    `aristas_prohibidas` y `nodos_prohibidos` permiten que Yen y el analisis de
+    resiliencia reutilicen este algoritmo sin modificar el grafo. Si no hay
+    camino, `Ruta.existe` es False.
     """
     _validar(G, origen, destino)
     condiciones = condiciones or CondicionesRed()
 
     if origen == destino:
-        # Caso limite: el viaje trivial. Sin este corte, la parada temprana
-        # ignoraria el estado inicial y la busqueda devolveria un ciclo de ida y
-        # vuelta en vez del camino vacio.
+        # Sin este corte, la parada temprana ignoraria el estado inicial y la
+        # busqueda devolveria un ciclo de ida y vuelta en vez del camino vacio.
         return Ruta(
             origen=origen,
             destino=destino,
@@ -80,7 +52,6 @@ def dijkstra(
         )
 
     espacio = EspacioEstados(G, condiciones)
-
     inicio: Estado = espacio.estado_inicial(origen)
 
     distancia: Dict[Estado, float] = {inicio: 0.0}
@@ -89,7 +60,7 @@ def dijkstra(
     expandidos = 0
 
     orden = count()                       # desempate determinista
-    cola = [(0.0, next(orden), inicio)]   # (distancia, orden, estado)
+    cola = [(0.0, next(orden), inicio)]
 
     estado_final: Optional[Estado] = None
     peso_final = 0.0
@@ -116,8 +87,7 @@ def dijkstra(
                 continue
 
             nueva = d_actual + peso
-            # Relajacion de la arista.
-            if nueva < distancia.get(sucesor, float("inf")):
+            if nueva < distancia.get(sucesor, float("inf")):     # relajacion
                 distancia[sucesor] = nueva
                 predecesor[sucesor] = (estado, datos)
                 heapq.heappush(cola, (nueva, next(orden), sucesor))
@@ -132,11 +102,10 @@ def dijkstra_todos_los_destinos(
     G: nx.MultiDiGraph, origen: str, condiciones: CondicionesRed = None
 ) -> Dict[str, float]:
     """
-    Distancia minima desde `origen` a TODAS las estaciones (sin parada temprana).
+    Distancia minima desde `origen` a todas las estaciones, sin parada temprana.
 
-    Es la forma original del algoritmo -un origen contra todos los destinos- y se
-    usa para analizar la red: estaciones mas lejanas, excentricidad del origen e
-    impacto de un cierre sobre el tiempo promedio de viaje.
+    Una sola ejecucion resuelve un origen contra el resto de la red; es la forma
+    que usa el analisis de resiliencia.
     """
     _validar(G, origen, origen)
     condiciones = condiciones or CondicionesRed()

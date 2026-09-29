@@ -1,30 +1,17 @@
 """
 Espacio de estados sobre el que corren los algoritmos de busqueda.
 
-El problema
------------
-El peso de un tramo NO depende solo de la arista: depende tambien de COMO llego
-el pasajero al nodo de origen. Tomar A11 -> B01 cuesta 2 minutos si el pasajero
-ya venia en la linea B, y 2 + 4 minutos si venia en la linea A y debe cambiar de
-anden. Un Dijkstra clasico sobre los nodos del grafo no puede representar eso.
-
-La solucion
------------
-Se ejecuta la busqueda sobre el grafo de estados
+El peso de un tramo depende de COMO llego el pasajero al nodo de origen: tomar
+A11 -> B01 cuesta 2 minutos si ya venia en la linea B, y 2 + 4 si venia en la A y
+debe cambiar de anden. Por eso la busqueda no recorre vertices sino estados
 
         S = V x (L U {None})
 
-donde un estado (u, l) significa "estar en la estacion u habiendo llegado por la
-linea l". El estado inicial es (origen, None) -el pasajero aun no ha abordado- y
-son estados meta todos los (destino, *).
+donde (u, l) significa "estar en la estacion u habiendo llegado por la linea l".
+Como cada estacion sirve a pocas lineas, |S| ~ 1.2 |V|.
 
-Este grafo de estados es a lo sumo |L| veces mas grande que G, pero como cada
-estacion sirve a pocas lineas (1 a 3), en la practica |S| ~ 1.2 |V|. El costo es
-despreciable y a cambio el conteo de transbordos es exacto.
-
-Esta clase es tambien el unico punto donde se consulta si una estacion o un tramo
-estan ACTIVOS, de modo que el reto de resiliencia (cerrar estaciones y recalcular)
-se implementa sin tocar ningun algoritmo.
+Esta clase es ademas el unico punto que consulta si una estacion o un tramo estan
+activos, de modo que el analisis de resiliencia no necesita tocar ningun algoritmo.
 """
 
 from typing import Iterator, Optional, Tuple
@@ -43,12 +30,10 @@ class EspacioEstados:
     def __init__(self, G: nx.MultiDiGraph, condiciones: CondicionesRed):
         self.G = G
         self.cond = condiciones
-        # Mapa linea -> modo, para deducir el sistema tarifario del estado.
         self._modo_de_linea = {
             d["linea"]: d["modo"] for _, _, d in G.edges(data=True)
         }
 
-    # -- Consultas basicas -------------------------------------------------- #
     def estado_inicial(self, origen: str) -> Estado:
         return (origen, None)
 
@@ -65,13 +50,12 @@ class EspacioEstados:
     def nodo_activo(self, nodo: str) -> bool:
         return self.G.nodes[nodo].get("activa", True)
 
-    # -- Expansion ---------------------------------------------------------- #
     def sucesores(self, estado: Estado) -> Iterator[Tuple[Estado, float, dict]]:
         """
         Devuelve (estado_sucesor, peso_de_la_transicion, datos_de_la_arista).
 
-        Se omiten las estaciones y tramos desactivados, y los modos que el
-        usuario pidio evitar mediante los filtros de la interfaz.
+        Omite estaciones y tramos desactivados y los modos que el usuario pidio
+        evitar mediante los filtros de la interfaz.
         """
         nodo, linea_previa = estado
         if not self.nodo_activo(nodo):
@@ -101,11 +85,8 @@ class EspacioEstados:
         """
         Indica si tomar esta arista constituye un cambio de linea.
 
-        Un transbordo a pie (O -> PEA -> A) es UN SOLO transbordo, no dos: se
-        contabiliza al entrar al tramo peatonal y no se vuelve a contar al
-        abordar la siguiente linea. De lo contrario el conteo de Dijkstra
-        duplicaria estos transbordos y no coincidiria con la cota que calcula BFS
-        sobre el grafo de lineas.
+        Un transbordo a pie (O -> PEA -> A) cuenta UNA sola vez: se contabiliza
+        al entrar al tramo peatonal y no se repite al abordar la linea siguiente.
         """
         _, linea_previa = estado_origen
         if linea_previa is None or linea_previa == config.LINEA_PEATONAL:

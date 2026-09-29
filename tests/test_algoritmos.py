@@ -1,9 +1,4 @@
-"""
-Pruebas de los algoritmos de busqueda de rutas.
-
-Incluye los casos limite que exige la rubrica: origen igual a destino, estaciones
-inexistentes, red interrumpida y filtros que dejan sin opciones al usuario.
-"""
+"""Pruebas de los algoritmos de busqueda de rutas, incluidos los casos limite."""
 
 import sys
 from pathlib import Path
@@ -30,9 +25,7 @@ def G():
     return construir_grafo()
 
 
-# --------------------------------------------------------------------------- #
 # Correccion de Dijkstra
-# --------------------------------------------------------------------------- #
 @pytest.mark.parametrize("origen,destino", PARES)
 def test_dijkstra_encuentra_una_ruta_valida(G, origen, destino):
     ruta = dijkstra(G, origen, destino)
@@ -70,9 +63,7 @@ def test_el_costo_de_un_viaje_solo_en_metro_es_una_tarifa(G):
     assert dijkstra(G, "A01", "A21").costo_total_cop == 3300
 
 
-# --------------------------------------------------------------------------- #
 # A* frente a Dijkstra
-# --------------------------------------------------------------------------- #
 @pytest.mark.parametrize("origen,destino", PARES)
 def test_a_estrella_obtiene_el_mismo_optimo_que_dijkstra(G, origen, destino):
     """Si difirieran, la heuristica Haversine no seria admisible."""
@@ -97,9 +88,7 @@ def test_coincide_con_networkx(G, origen, destino):
     assert c["propio_no_mejora_la_cota"]
 
 
-# --------------------------------------------------------------------------- #
 # Criterios de optimizacion
-# --------------------------------------------------------------------------- #
 def test_cada_criterio_optimiza_su_propia_metrica(G):
     """
     La ruta mas rapida no puede ser mas lenta que la mas economica, y la mas
@@ -121,9 +110,7 @@ def test_todos_los_criterios_producen_ruta(G, criterio):
     assert ruta.existe
 
 
-# --------------------------------------------------------------------------- #
 # BFS: minimo de transbordos
-# --------------------------------------------------------------------------- #
 def test_misma_linea_implica_cero_transbordos(G):
     assert minimos_transbordos(G, "A01", "A21") == 0
 
@@ -141,9 +128,7 @@ def test_dijkstra_alcanza_la_cota_de_transbordos_de_bfs(G, origen, destino):
     assert ruta.num_transbordos == cota
 
 
-# --------------------------------------------------------------------------- #
 # Yen: rutas alternativas
-# --------------------------------------------------------------------------- #
 def test_yen_devuelve_rutas_distintas_y_ordenadas(G):
     rutas = k_rutas_alternativas(G, "A09", "O08", k=3)
     assert len(rutas) >= 2
@@ -166,9 +151,7 @@ def test_yen_rechaza_k_invalido(G):
         k_rutas_alternativas(G, "A01", "A21", k=0)
 
 
-# --------------------------------------------------------------------------- #
 # Casos limite
-# --------------------------------------------------------------------------- #
 def test_origen_igual_a_destino(G):
     ruta = dijkstra(G, "A11", "A11")
     assert ruta.existe

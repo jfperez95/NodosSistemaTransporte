@@ -1,21 +1,10 @@
 """
 Comparacion empirica de estrategias de busqueda.
 
-La rubrica premia "comparacion de varias estrategias/algoritmos alternativos,
-pruebas de eficiencia". Este modulo mide, sobre pares origen-destino reales de la
-red, dos cosas:
-
-  * **Nodos expandidos**: cuantos estados saco cada algoritmo de la cola. Es la
-    medida honesta del trabajo realizado, independiente de la maquina.
-  * **Tiempo de ejecucion**: milisegundos promedio por consulta.
-
-Y verifica lo mas importante: que Dijkstra y A* devuelvan **el mismo peso
-optimo**. Si difirieran, la heuristica de A* no seria admisible.
-
-Tambien se incluye `networkx.dijkstra_path` como referencia externa sobre un
-grafo simplificado (peso = minutos, sin transbordos), para mostrar que la
-implementacion propia coincide con una libreria madura en el caso que ambas
-pueden representar.
+Mide, sobre pares origen-destino de la red, los estados expandidos por cada
+algoritmo -la medida de trabajo independiente de la maquina- y los milisegundos
+por consulta, y verifica que Dijkstra y A* alcancen el mismo peso optimo. Incluye
+ademas `networkx` como referencia externa sobre el grafo simplificado.
 """
 
 import time
@@ -150,9 +139,7 @@ def contrastar_con_networkx(
     camino_nx = nx.dijkstra_path(H, origen, destino, weight="minutos")
 
     propio = dijkstra(G, origen, destino, condiciones)
-    # Se recalcula sin redondear: `Tramo.minutos` viene redondeado a 2 decimales
-    # para la interfaz, y sumar 20 tramos asi introduce un error que falsearia la
-    # comparacion contra networkx.
+    # Sin redondear: `Tramo.minutos` viene redondeado para la interfaz.
     minutos_propio = sum(
         tiempo_arista(G[t.origen][t.destino][t.linea], condiciones)
         for t in propio.tramos

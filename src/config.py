@@ -1,41 +1,23 @@
 """
 Parametros de la simulacion: tarifas, perfiles horarios, pesos por criterio y
 presentacion visual de cada modo de transporte.
-
-Centralizar estos valores permite ajustar el comportamiento del modelo sin tocar
-la logica del grafo ni la de los algoritmos.
 """
 
 from pathlib import Path
 
-# --------------------------------------------------------------------------- #
-# Rutas del proyecto
-# --------------------------------------------------------------------------- #
 RAIZ_PROYECTO = Path(__file__).resolve().parent.parent
 DIR_DATOS = RAIZ_PROYECTO / "datos"
 RUTA_ESTACIONES = DIR_DATOS / "estaciones.csv"
 RUTA_CONEXIONES = DIR_DATOS / "conexiones.csv"
 
-# --------------------------------------------------------------------------- #
-# Modos de transporte
-# --------------------------------------------------------------------------- #
 MODOS = ("metro", "tranvia", "cable", "bus", "peatonal")
 
 # Identificador reservado de la "linea" que representa los recorridos a pie entre
 # estaciones cercanas. No es un servicio: es el pegamento entre dos servicios.
 LINEA_PEATONAL = "PEA"
 
-# Color por modo, para la visualizacion georreferenciada (paso 5).
-#
-# Paleta CATEGORICA: el color identifica el modo de transporte, no una magnitud,
-# asi que los tonos se asignan en orden fijo y nunca se reciclan. Se valido con el
-# comprobador de contraste y daltonismo sobre superficie clara:
-#   - franja de luminosidad y piso de croma: OK
-#   - separacion para vision normal: peor par 21.4 (minimo exigido 15)
-#   - separacion bajo deuteranopia: peor par (cable/tranvia) 6.9, en el suelo
-#     admisible, lo que OBLIGA a una codificacion secundaria -> ESTILO_MODO.
-# Por eso la aplicacion fija tema claro: una paleta oscura sin validar seria peor
-# que no ofrecer modo oscuro.
+# Paleta categorica por modo, validada contra daltonismo sobre superficie clara.
+# La separacion cable/tranvia queda en el minimo admisible, de ahi ESTILO_MODO.
 COLOR_MODO = {
     "metro": "#0B5FA5",
     "tranvia": "#009A44",
@@ -45,8 +27,7 @@ COLOR_MODO = {
 }
 
 # Codificacion secundaria obligatoria: patron de trazo por modo, para que el modo
-# siga siendo legible sin depender del color (daltonismo, impresion en blanco y
-# negro, proyector de mala calidad en la sustentacion).
+# siga siendo legible sin depender del color).
 ESTILO_MODO = {
     "metro": None,            # linea continua
     "tranvia": "10, 4",
@@ -63,9 +44,6 @@ NOMBRE_MODO = {
     "peatonal": "Recorrido a pie",
 }
 
-# --------------------------------------------------------------------------- #
-# Sistema tarifario (pesos colombianos, valores de simulacion 2026)
-# --------------------------------------------------------------------------- #
 # Los modos que comparten "sistema tarifario" no cobran de nuevo al transbordar:
 # el usuario paga una vez al entrar y los transbordos integrados son gratuitos.
 SISTEMA_TARIFARIO = {
@@ -93,9 +71,6 @@ RECARGO_TRANSBORDO_COP = {
 # Lineas con tarifa especial que se cobra aparte (Linea L, turistica a Arvi).
 RECARGO_LINEA_COP = {"L": 12000}
 
-# --------------------------------------------------------------------------- #
-# Dinamica temporal: perfiles horarios
-# --------------------------------------------------------------------------- #
 # Multiplicador que se aplica al tiempo base y nivel de ocupacion esperado.
 # Es el componente que convierte el grafo estatico en un GRAFO DINAMICO.
 PERFILES_HORARIOS = {
@@ -149,9 +124,6 @@ SENSIBILIDAD_CONGESTION = {
     "peatonal": 0.0,
 }
 
-# --------------------------------------------------------------------------- #
-# Criterios de optimizacion
-# --------------------------------------------------------------------------- #
 # Cada criterio define los coeficientes (alfa, beta, gamma, delta) de la funcion
 # de peso w = alfa*tiempo + beta*costo_normalizado + gamma*transbordo + delta*riesgo
 CRITERIOS = {
@@ -201,8 +173,5 @@ PENALIZACION_TRANSBORDO_MIN = {
 # 1 unidad de peso == COSTO_POR_UNIDAD_PESO pesos colombianos.
 COSTO_POR_UNIDAD_PESO = 300.0
 
-# --------------------------------------------------------------------------- #
-# Validaciones del dataset
-# --------------------------------------------------------------------------- #
 DISTANCIA_MAX_PEATONAL_KM = 0.8   # linea recta entre estaciones de un transbordo a pie
 TIEMPO_MIN_TRAMO = 0.1            # minutos; evita aristas de peso cero

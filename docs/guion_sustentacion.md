@@ -79,9 +79,8 @@ Guion exacto, sin improvisar:
 5. **Cerrar San Antonio** en *Simular interrupciones* → pestaña Resiliencia:
    *"+11.2 % en el viaje promedio y 443 trayectos que dejan de existir."*
 
-> **Plan B:** si falla el entorno, abrir `docs/mapa_red.html` (mapa exportado) y
-> correr `python scripts/02_demo_rutas.py` en la terminal. Tenerlo probado en el
-> portátil que se va a usar, no en otro.
+> **Plan B:** si falla el entorno, abrir `docs/mapa_red.html` (el mapa exportado).
+> Tenerlo probado en el portátil que se va a usar, no en otro.
 
 ## Bloque 5 — Retos avanzados y cierre (1:30)
 
@@ -136,6 +135,7 @@ primera, el intervalo saldría de ±1 minuto sobre 80 — falsamente preciso.
 
 - [ ] `pip install -r requirements.txt` probado en el portátil de la exposición
 - [ ] `python -m pytest -q` en verde (105 pruebas)
+- [ ] Saber explicar de viva voz cómo se obtuvieron distancias y tiempos
 - [ ] `streamlit run app.py` abre sin errores y con internet disponible (el mapa
       base descarga los tiles de OpenStreetMap)
 - [ ] `docs/mapa_red.html` exportado, como plan B

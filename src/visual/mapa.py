@@ -1,24 +1,9 @@
 """
-Paso 5 - Mapa georreferenciado de la red sobre Medellin.
+Mapa georreferenciado de la red sobre Medellin.
 
-Decisiones de diseno
---------------------
-* **La red completa se dibuja recesiva** (trazo fino, opacidad baja) y la ruta
-  calculada se dibuja encima, gruesa y con un reborde blanco. Asi el mapa
-  contextualiza sin competir: el ojo va primero a la ruta.
-
-* **El color identifica el MODO, no la ruta.** Cada tramo de la ruta conserva el
-  color de su modo, de forma que el usuario ve de un vistazo "aqui voy en metro,
-  aqui en cable". Un color unico de ruta perderia esa informacion.
-
-* **Codificacion secundaria por patron de trazo.** La separacion entre el naranja
-  del cable y el verde del tranvia queda en el minimo admisible bajo
-  deuteranopia, asi que el modo tambien se distingue por el patron de la linea.
-  El mapa sigue siendo legible en escala de grises.
-
-* **Los marcadores llevan la informacion, no las etiquetas.** Rotular 61
-  estaciones satura el mapa; el nombre y los atributos aparecen al pasar el
-  cursor o hacer clic.
+La red completa se dibuja recesiva y la ruta encima, con reborde blanco y el
+color del modo de cada tramo. El modo se distingue ademas por el patron de trazo,
+para que el mapa siga siendo legible en escala de grises.
 """
 
 from typing import Iterable, List, Optional, Sequence, Tuple
@@ -32,9 +17,7 @@ from src.algoritmos.ruta import Ruta
 CENTRO_MEDELLIN = (6.2450, -75.5750)
 ZOOM_INICIAL = 12
 
-# Mapa base. Se usa OpenStreetMap porque no exige clave de API: los tiles claros
-# de CartoDB empezaron a requerirla y el mapa quedaria en blanco en la maquina de
-# quien clone el repositorio -incluida la del dia de la sustentacion-.
+# Mapa base: OpenStreetMap no exige clave de API.
 TILES = "OpenStreetMap"
 
 COLOR_RUTA_BORDE = "#FFFFFF"
@@ -76,9 +59,7 @@ def _popup_tramo(G: nx.MultiDiGraph, u: str, v: str, datos: dict) -> str:
     )
 
 
-# --------------------------------------------------------------------------- #
 # Capas
-# --------------------------------------------------------------------------- #
 def _dibujar_red(mapa: folium.Map, G: nx.MultiDiGraph, tramos_en_ruta: set) -> None:
     """Capa base: todos los tramos, recesivos, coloreados por modo."""
     dibujados = set()
@@ -199,9 +180,7 @@ def _dibujar_propuestas(
         ).add_to(mapa)
 
 
-# --------------------------------------------------------------------------- #
 # API publica
-# --------------------------------------------------------------------------- #
 def mapa_de_la_red(
     G: nx.MultiDiGraph,
     ruta: Optional[Ruta] = None,

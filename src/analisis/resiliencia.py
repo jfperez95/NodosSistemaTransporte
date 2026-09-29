@@ -1,26 +1,10 @@
 """
-Reto avanzado 2 - Analisis de resiliencia de la red.
+Analisis de resiliencia de la red.
 
-Responde tres preguntas:
-
-  1. **Que estaciones son criticas?** Se miden de dos formas complementarias:
-     - *Centralidad de intermediacion* (betweenness): que fraccion de los caminos
-       minimos de la red pasa por cada estacion. Es una medida estructural,
-       barata, que senala los cuellos de botella topologicos.
-     - *Impacto real de cierre*: se cierra la estacion, se recalculan las rutas y
-       se mide cuanto empeora el tiempo promedio y cuantos pares quedan
-       incomunicados. Es la medida honesta, y la que puede diferir de la
-       intuicion: una estacion muy central puede tener alternativa, y una poco
-       central puede ser un puente de corte (un vertice cuya eliminacion
-       desconecta el grafo).
-
-  2. **Que pasa si ocurre un evento disruptivo?** `red_con_evento` devuelve una
-     copia del grafo con estaciones o tramos desactivados y, opcionalmente, con
-     el clima degradado. Los algoritmos no cambian: `EspacioEstados` ya omite
-     todo lo que este inactivo.
-
-  3. **Cual es la ruta alternativa?** `responder_a_evento` calcula la ruta antes
-     y despues del evento y cuantifica el sobrecosto para el usuario.
+Mide la criticidad de cada estacion de dos formas complementarias: la centralidad
+de intermediacion, que es estructural, y el impacto real de cerrarla, que se
+obtiene recalculando la red. Permite ademas simular eventos disruptivos y
+recalcular la ruta del usuario sobre la red afectada.
 """
 
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -32,30 +16,23 @@ from src.algoritmos.dijkstra import dijkstra, dijkstra_todos_los_destinos
 from src.algoritmos.ruta import Ruta
 from src.modelo.pesos import CondicionesRed
 
-# Origenes usados como muestra para estimar el tiempo promedio de la red.
-# Cubren los cuatro extremos del sistema mas los principales intercambios, de
-# modo que el promedio no quede sesgado hacia un solo corredor.
+# Muestra de origenes: los extremos del sistema y los principales intercambios.
 MUESTRA_ORIGENES = (
     "A01", "A21", "B06", "J03", "K03", "L01",
     "H02", "M02", "T08", "O01", "O12", "A11",
 )
 
 
-# --------------------------------------------------------------------------- #
 # 1. Medidas de criticidad
-# --------------------------------------------------------------------------- #
 def centralidad_intermediacion(
     G: nx.MultiDiGraph, condiciones: CondicionesRed = None
 ) -> Dict[str, float]:
     """
     Centralidad de intermediacion de cada estacion, ponderada por tiempo.
 
-    Para cada par (s, t) se calcula la fraccion de caminos minimos de s a t que
-    pasan por el vertice v. Sumada sobre todos los pares y normalizada, da una
-    medida de "cuanto trafico de paso" soporta la estacion.
-
-    Se evalua sobre la proyeccion simple del multigrafo (peso = minutos), que es
-    la representacion sobre la que la medida esta definida.
+    Mide que fraccion de los caminos minimos de la red pasa por cada vertice. Se
+    evalua sobre la proyeccion simple del multigrafo, que es la representacion
+    sobre la que la medida esta definida.
     """
     condiciones = condiciones or CondicionesRed(criterio="tiempo")
     H = grafo_simple_de_tiempos(G, condiciones)
@@ -96,12 +73,9 @@ def _comparar_escenarios(
     """
     (promedio antes, promedio despues, pares que dejaron de existir).
 
-    El promedio se calcula SOLO sobre los pares que siguen siendo alcanzables
-    despues del evento. Compararlo contra el promedio de todos los pares
-    originales seria enganoso: al desaparecer los trayectos largos -que son
-    justamente los que el cierre rompe-, el promedio de los que sobreviven BAJA,
-    y un cierre grave parece una mejora. Es sesgo de supervivencia; aqui se evita
-    midiendo ambos escenarios sobre el mismo conjunto de pares.
+    El promedio se mide solo sobre los pares alcanzables en ambos escenarios.
+    Promediarlo sobre todos los pares originales produce sesgo de supervivencia:
+    al desaparecer los trayectos largos, un cierre grave pareceria una mejora.
     """
     comunes = [par for par in base if par in nuevo]
     perdidos = len(base) - len(comunes)
@@ -147,16 +121,9 @@ def puntos_criticos(
     """
     Ordena las estaciones por el dano real que causaria cerrarlas.
 
-    Para cada estacion se cierra la red en ella y se recalcula el tiempo promedio
-    de viaje sobre la muestra de origenes. El resultado combina:
-
-      * `incremento_%`: cuanto se alarga el viaje promedio.
-      * `pares_incomunicados`: cuantos trayectos dejan de existir. Este es el
-        indicador grave: senala los VERTICES DE CORTE del grafo, aquellos cuya
-        eliminacion aumenta el numero de componentes conexas.
-
-    Complejidad: |V| x |muestra| ejecuciones de Dijkstra. Con 61 estaciones y 12
-    origenes son ~730 busquedas, alrededor de un segundo.
+    `incremento_%` mide cuanto se alarga el viaje promedio; `pares_incomunicados`
+    cuantos trayectos dejan de existir, lo que senala los vertices de corte del
+    grafo. Complejidad: |V| x |muestra| ejecuciones de Dijkstra.
     """
     condiciones = condiciones or CondicionesRed(criterio="tiempo")
     base = _distancias_desde_muestra(G, condiciones, origenes)
@@ -192,9 +159,7 @@ def puntos_criticos(
     return resultados[:top]
 
 
-# --------------------------------------------------------------------------- #
 # 2. Simulacion de eventos disruptivos
-# --------------------------------------------------------------------------- #
 def red_con_evento(
     G: nx.MultiDiGraph,
     estaciones_cerradas: Iterable[str] = (),
@@ -204,12 +169,9 @@ def red_con_evento(
     """
     Copia del grafo con los elementos afectados desactivados.
 
-    Modela cierres por mantenimiento, incidentes o suspension completa de una
-    linea. No se borran vertices ni aristas: se marcan como inactivos, de modo
-    que la red original queda intacta y el evento es reversible.
-
-    `tramos_cerrados` recibe tuplas (origen, destino, linea); se desactivan los
-    DOS sentidos, porque un cierre de via fisica afecta ambos.
+    No se borran vertices ni aristas: se marcan como inactivos, de modo que la
+    red original queda intacta y el evento es reversible. Un tramo cerrado se
+    desactiva en los dos sentidos.
     """
     H = G.copy()
 
@@ -264,9 +226,7 @@ def impacto_de_cierre(
     }
 
 
-# --------------------------------------------------------------------------- #
 # 3. Recalculo automatico de rutas
-# --------------------------------------------------------------------------- #
 def responder_a_evento(
     G: nx.MultiDiGraph,
     origen: str,

@@ -1,13 +1,8 @@
 """
-Paso 4 - Interfaz de usuario del calculador de rutas.
+Interfaz de usuario del calculador de rutas.
 
-Aplicacion Streamlit organizada en cinco pestanas:
-
-  1. Ruta           - el MVP: origen, destino, criterio, hora y mapa con la ruta.
-  2. La red         - metricas del grafo y comparacion de algoritmos.
-  3. Resiliencia    - estaciones criticas, eventos disruptivos y desvios.
-  4. Prediccion     - tiempos con intervalo de confianza.
-  5. Optimizacion   - brechas de la red y simulacion de nuevas conexiones.
+Aplicacion Streamlit con cinco paneles: Ruta, La red, Resiliencia, Prediccion y
+Optimizacion.
 
 Ejecutar con:  streamlit run app.py
 """
@@ -60,9 +55,7 @@ st.set_page_config(
 )
 
 
-# --------------------------------------------------------------------------- #
 # Carga con cache
-# --------------------------------------------------------------------------- #
 @st.cache_resource
 def cargar_grafo():
     """El grafo se construye una sola vez por sesion."""
@@ -95,9 +88,7 @@ def etiqueta(nodo: str) -> str:
     return f"{d['nombre']}  ·  {config.NOMBRE_MODO[d['modo']]} ({', '.join(d['lineas'])})"
 
 
-# --------------------------------------------------------------------------- #
 # Barra lateral: la consulta
-# --------------------------------------------------------------------------- #
 st.sidebar.title("Planear viaje")
 
 origen = st.sidebar.selectbox(
@@ -161,9 +152,7 @@ hay_evento = bool(cerradas or suspendidas)
 G_activo = red_con_evento(G, cerradas, (), suspendidas) if hay_evento else G
 
 
-# --------------------------------------------------------------------------- #
 # Encabezado
-# --------------------------------------------------------------------------- #
 st.title("Rutas optimas del Metro de Medellin")
 st.caption(
     "Sistema Integrado de Transporte del Valle de Aburra modelado como grafo "
@@ -182,9 +171,7 @@ pestanas = st.tabs(
 )
 
 
-# --------------------------------------------------------------------------- #
 # 1. Ruta (MVP)
-# --------------------------------------------------------------------------- #
 with pestanas[0]:
     # No se usa st.stop(): detendria el script entero y dejaria las demas
     # pestanas en blanco. El caso trivial se resuelve dentro de esta pestana.
@@ -306,9 +293,7 @@ with pestanas[0]:
         )
 
 
-# --------------------------------------------------------------------------- #
 # 2. La red
-# --------------------------------------------------------------------------- #
 with pestanas[1]:
     st.subheader("El sistema como grafo G = (V, E, w)")
     resumen = resumen_grafo(G)
@@ -384,9 +369,7 @@ with pestanas[1]:
     )
 
 
-# --------------------------------------------------------------------------- #
 # 3. Resiliencia
-# --------------------------------------------------------------------------- #
 with pestanas[2]:
     st.subheader("Estaciones criticas")
     st.caption(
@@ -465,9 +448,7 @@ with pestanas[2]:
             )
 
 
-# --------------------------------------------------------------------------- #
 # 4. Prediccion
-# --------------------------------------------------------------------------- #
 with pestanas[3]:
     st.subheader("Tiempo esperado, con intervalo de confianza")
     st.caption(
@@ -538,9 +519,7 @@ with pestanas[3]:
         st.dataframe(comparar_con_la_verdad(modelo), hide_index=True, width="stretch")
 
 
-# --------------------------------------------------------------------------- #
 # 5. Optimizacion
-# --------------------------------------------------------------------------- #
 with pestanas[4]:
     st.subheader("Donde convendria construir")
     st.caption(

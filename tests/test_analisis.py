@@ -46,9 +46,7 @@ def cond():
     return CondicionesRed(criterio="tiempo")
 
 
-# --------------------------------------------------------------------------- #
 # Resiliencia
-# --------------------------------------------------------------------------- #
 def test_red_con_evento_no_altera_la_original(G):
     H = red_con_evento(G, estaciones_cerradas=["A11"])
     assert H.nodes["A11"]["activa"] is False
@@ -117,9 +115,7 @@ def test_responder_a_evento_ignora_cierres_lejanos(G, cond):
     assert r["minutos_extra"] == 0
 
 
-# --------------------------------------------------------------------------- #
 # Prediccion
-# --------------------------------------------------------------------------- #
 @pytest.fixture(scope="module")
 def modelo(G):
     return ajustar_modelo(generar_historico(G, observaciones=4000))
@@ -204,9 +200,7 @@ def test_historico_vacio_es_rechazado():
         ajustar_modelo(pd.DataFrame())
 
 
-# --------------------------------------------------------------------------- #
 # Optimizacion
-# --------------------------------------------------------------------------- #
 def test_las_brechas_tienen_rodeo_mayor_que_uno(G, cond):
     brechas = detectar_brechas(G, cond, top=5, origenes=MUESTRA)
     assert brechas

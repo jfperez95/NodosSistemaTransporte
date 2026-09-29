@@ -1,11 +1,4 @@
-"""
-Lectura y validacion de los archivos CSV que describen la red.
-
-La carga es estricta a proposito: si el dataset tiene un error (una estacion
-inexistente, un tiempo negativo, un transbordo a pie imposible), el programa
-falla aqui con un mensaje claro y no mas adelante con una ruta silenciosamente
-incorrecta.
-"""
+"""Lectura y validacion de los archivos CSV que describen la red."""
 
 import csv
 from pathlib import Path

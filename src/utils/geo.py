@@ -1,10 +1,8 @@
 """
 Calculos geograficos sobre las coordenadas de las estaciones.
 
-La funcion `haversine_km` es la base de la heuristica admisible que usa el
-algoritmo A* (ver `src/algoritmos/a_estrella.py`): la distancia en linea recta
-entre dos estaciones nunca sobreestima la distancia real por la via, por lo que
-el coste estimado derivado de ella tampoco sobreestima el coste real.
+`cota_inferior_minutos` es la heuristica admisible de A*: la distancia en linea
+recta a la velocidad maxima del sistema nunca sobreestima el tiempo real.
 """
 
 from math import asin, cos, radians, sin, sqrt

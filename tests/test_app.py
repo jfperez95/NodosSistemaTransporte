@@ -1,13 +1,8 @@
 """
-Pruebas de humo de la interfaz (`app.py`).
+Pruebas de humo de la interfaz.
 
-Usan `streamlit.testing`, que ejecuta el script de la aplicacion sin navegador y
-expone los elementos renderizados. No comprueban la apariencia -eso se revisa a
-ojo-, sino que la aplicacion **no se rompe** en los escenarios que el usuario
-puede provocar: el viaje trivial, la red interrumpida y los filtros imposibles.
-
-Son mas lentas que el resto de la suite porque cada `run()` reconstruye el grafo
-y ejecuta los cinco paneles.
+Verifican que la aplicacion no se rompa en los escenarios que el usuario puede
+provocar: el viaje trivial, la red interrumpida y los filtros imposibles.
 """
 
 import sys

@@ -1,31 +1,11 @@
 """
-Reto avanzado 3 - Optimizacion de la red: donde convendria construir.
+Optimizacion de la red: donde convendria construir.
 
-La pregunta
------------
-Que par de estaciones esta *geograficamente cerca pero topologicamente lejos*?
-Esos son los huecos de la red: dos puntos separados por pocos kilometros que
-obligan a un rodeo de media hora porque no hay conexion directa.
-
-La medida: factor de rodeo
---------------------------
-Para cada par (u, v) no adyacente se compara
-
-    rodeo(u, v) = tiempo_real_en_la_red(u, v) / tiempo_ideal_en_linea_recta(u, v)
-
-El denominador es la cota inferior Haversine que ya usa A*. Un rodeo de 1.2
-significa que la red es casi optima para ese par; un rodeo de 6 significa que el
-usuario da una vuelta enorme para cubrir una distancia corta.
-
-Los pares con mayor rodeo *y* con distancia fisica construible son los candidatos
-naturales a una nueva conexion.
-
-La verificacion
----------------
-Proponer no basta: hay que demostrar que sirve. `evaluar_propuesta` agrega la
-arista al grafo, recalcula el tiempo promedio de la red sobre la misma muestra de
-origenes que usa el analisis de resiliencia, y reporta la mejora real. Una
-propuesta que no mejora el promedio se descarta, por atractiva que parezca.
+Para cada par de estaciones no adyacentes se calcula el factor de rodeo -tiempo
+real en la red dividido por el tiempo ideal en linea recta-. Los pares con mayor
+rodeo y distancia construible son los candidatos. Cada propuesta se agrega al
+grafo y se mide la mejora real del tiempo promedio de la red; las que no mejoran
+se descartan.
 """
 
 from typing import Iterable, List, Optional, Sequence, Tuple

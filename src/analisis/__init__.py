@@ -1,10 +1,4 @@
-"""
-Retos avanzados: analisis de la red mas alla del calculo de una ruta.
-
-  * `resiliencia`  - puntos criticos, eventos disruptivos y recalculo de rutas.
-  * `prediccion`   - tiempos de viaje con intervalos de confianza.
-  * `optimizacion` - brechas de la red y simulacion de nuevas conexiones.
-"""
+"""Retos avanzados: resiliencia, prediccion de tiempos y optimizacion de la red."""
 
 from src.analisis.resiliencia import (
     centralidad_intermediacion,

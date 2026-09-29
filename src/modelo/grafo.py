@@ -1,21 +1,10 @@
 """
-Paso 2 - Construccion del grafo dirigido y ponderado de la red SITVA.
+Construccion del grafo dirigido y ponderado de la red SITVA.
 
-Decisiones de modelado
-----------------------
-1. **Dirigido.** Cada tramo bidireccional se expande en dos aristas opuestas.
-   Aunque hoy sean simetricas, esto permite representar mas adelante cierres o
-   demoras que afectan un solo sentido (reto de resiliencia).
-
-2. **Multigrafo.** Se usa `networkx.MultiDiGraph` con la LINEA como clave de la
-   arista: dos estaciones pueden estar unidas por mas de un servicio y el
-   algoritmo necesita distinguir por cual linea se viaja para poder contar
-   transbordos.
-
-3. **Los transbordos NO son nodos.** Una estacion de intercambio (San Antonio,
-   Acevedo, San Javier...) es UN SOLO vertice que sirve a varias lineas. El costo
-   de cambiar de linea se aplica en el espacio de estados (nodo, linea), no
-   duplicando vertices: ver `src/algoritmos/espacio_estados.py`.
+Se usa `MultiDiGraph` con la LINEA como clave de arista: dos estaciones pueden
+estar unidas por varios servicios y el algoritmo necesita distinguir por cual se
+viaja para contar transbordos. Una estacion de intercambio es UN SOLO vertice; el
+costo de cambiar de linea se aplica en el espacio de estados (nodo, linea).
 """
 
 from typing import Dict, List
@@ -34,7 +23,6 @@ def construir_grafo(
     Construye G = (V, E) a partir de las estaciones y conexiones.
 
     Si no se pasan argumentos, carga los datos desde los CSV por defecto.
-    Los atributos quedan disponibles en `G.nodes[u]` y `G[u][v][linea]`.
     """
     if estaciones is None:
         estaciones = cargar_estaciones()
@@ -55,7 +43,7 @@ def construir_grafo(
             tipo_estacion=est.tipo_estacion,
             accesibilidad=est.accesibilidad,
             servicios=est.servicios,
-            activa=True,          # el reto de resiliencia la puede desactivar
+            activa=True,
         )
 
     for con in conexiones:
@@ -73,11 +61,10 @@ def construir_grafo(
                 tiempo_base_min=con.tiempo_base_min,
                 distancia_km=con.distancia_km,
                 capacidad_pasajeros_hora=con.capacidad_pasajeros_hora,
-                activa=True,      # el reto de resiliencia la puede desactivar
+                activa=True,
             )
 
-    # Indice auxiliar: que lineas sirve cada estacion. Sirve para la interfaz y
-    # para detectar estaciones de intercambio reales.
+    # Indice auxiliar: que lineas sirve cada estacion.
     for nodo in G.nodes:
         lineas = {d["linea"] for _, _, d in G.out_edges(nodo, data=True)}
         lineas |= {d["linea"] for _, _, d in G.in_edges(nodo, data=True)}
@@ -95,14 +82,12 @@ def lineas_de(G: nx.MultiDiGraph, nodo: str) -> tuple:
 
 def resumen_grafo(G: nx.MultiDiGraph) -> dict:
     """
-    Metricas descriptivas del grafo, en el vocabulario de la teoria de grafos.
+    Metricas descriptivas del grafo: orden, tamano, grados, densidad y conexidad.
 
-    Incluye orden |V|, tamano |E|, grados, densidad y conectividad. La conexidad
-    fuerte es la propiedad relevante aqui: garantiza que exista al menos un
-    camino dirigido entre CUALQUIER par ordenado de estaciones, es decir, que el
-    calculador de rutas nunca fallara por falta de recorrido.
+    La conexidad fuerte garantiza que exista un camino dirigido entre cualquier
+    par ordenado de estaciones.
     """
-    no_dirigido = nx.Graph(G)          # colapsa sentidos y lineas paralelas
+    no_dirigido = nx.Graph(G)
     grados = dict(G.degree())
 
     componentes_fuertes = list(nx.strongly_connected_components(G))
@@ -129,13 +114,10 @@ def resumen_grafo(G: nx.MultiDiGraph) -> dict:
 
 def matriz_adyacencia(G: nx.MultiDiGraph):
     """
-    Matriz de adyacencia A (|V| x |V|) del grafo subyacente.
+    Matriz de adyacencia A (|V| x |V|): A[i][j] = 1 si existe la arista (i, j).
 
-    A[i][j] = 1 si existe la arista dirigida (i, j); 0 en caso contrario.
-    Se incluye porque la guia del curso trabaja las dos representaciones
-    clasicas -matriz de adyacencia y lista de adyacencia-; la implementacion del
-    proyecto usa lista de adyacencia (la que ofrece networkx) porque el grafo es
-    disperso: |E| es del orden de |V|, no de |V|^2.
+    El proyecto usa listas de adyacencia porque el grafo es disperso; la matriz
+    se incluye como la otra representacion clasica del curso.
     """
     nodos = sorted(G.nodes())
     indice = {n: i for i, n in enumerate(nodos)}
